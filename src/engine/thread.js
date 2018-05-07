@@ -13,7 +13,48 @@ const _stackFrameFreeList = [];
  */
 class _StackFrame {
     constructor (warpMode) {
-        this.reuse(warpMode);
+        /**
+         * Whether this level of the stack is a loop.
+         * @type {boolean}
+         */
+        this.isLoop = false;
+
+        /**
+         * Whether this level is in warp mode.  Is set by some legacy blocks and
+         * "turbo mode"
+         * @type {boolean}
+         */
+        this.warpMode = warpMode;
+
+        /**
+         * Reported value from just executed block.
+         * @type {???}
+         */
+        this.justReported = null;
+
+        /**
+         * Persists reported inputs during async block.
+         * @type {???}
+         */
+        this.reported = null;
+
+        /**
+         * Name of waiting reporter.
+         * @type {string}
+         */
+        this.waitingReporter = null;
+
+        /**
+         * Procedure parameters.
+         * @type {Object}
+         */
+        this.params = null;
+
+        /**
+         * A context passed to block implementations.
+         * @type {Object}
+         */
+        this.executionContext = null;
     }
 
     /**
@@ -22,19 +63,13 @@ class _StackFrame {
      * @return {_StackFrame} this
      */
     reset () {
-        // Whether this level of the stack is a loop.
+
         this.isLoop = false;
-        // Whether this level is in warp mode.
         this.warpMode = false;
-        // Reported value from just executed block.
         this.justReported = null;
-        // Persists reported inputs during async block.
         this.reported = null;
-        // Name of waiting reporter.
         this.waitingReporter = null;
-        // Procedure parameters.
         this.params = null;
-        // A context passed to block implementations.
         this.executionContext = null;
 
         return this;
@@ -70,7 +105,7 @@ class _StackFrame {
      * @param {_StackFrame} stackFrame The frame to reset and recycle.
      */
     static release (stackFrame) {
-        if (stackFrame) {
+        if (typeof stackFrame !== 'undefined') {
             _stackFrameFreeList.push(stackFrame.reset());
         }
     }
@@ -201,7 +236,7 @@ class Thread {
         // Might not, if we just popped the stack.
         if (this.stack.length > this.stackFrames.length) {
             const last = this.stackFrames[this.stackFrames.length - 1];
-            this.stackFrames.push(StackFrames.create(last && last.warpMode));
+            this.stackFrames.push(_StackFrame.create(last && last.warpMode));
         }
     }
 
@@ -220,7 +255,7 @@ class Thread {
      * @return {string} Block ID popped from the stack.
      */
     popStack () {
-        StackFrames.release(this.stackFrames.pop());
+        _StackFrame.release(this.stackFrames.pop());
         return this.stack.pop();
     }
 
