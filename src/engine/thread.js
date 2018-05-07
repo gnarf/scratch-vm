@@ -28,13 +28,13 @@ class _StackFrame {
 
         /**
          * Reported value from just executed block.
-         * @type {???}
+         * @type {Any}
          */
         this.justReported = null;
 
         /**
          * Persists reported inputs during async block.
-         * @type {???}
+         * @type {Object}
          */
         this.reported = null;
 
@@ -235,8 +235,8 @@ class Thread {
         // Push an empty stack frame, if we need one.
         // Might not, if we just popped the stack.
         if (this.stack.length > this.stackFrames.length) {
-            const last = this.stackFrames[this.stackFrames.length - 1];
-            this.stackFrames.push(_StackFrame.create(last && last.warpMode));
+            const parent = this.stackFrames[this.stackFrames.length - 1];
+            this.stackFrames.push(_StackFrame.create(typeof parent !== 'undefined' && parent.warpMode));
         }
     }
 
